@@ -1,0 +1,4 @@
+MRI Parameter Lab v1.2 — static GitHub Pages build
+source_sha=da8e185c9e792cdcc69d2e20f02de00f36e90de0
+build_base=/mri-parameter-lab/
+review_status=NOT_STARTED
