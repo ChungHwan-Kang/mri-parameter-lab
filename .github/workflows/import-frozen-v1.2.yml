@@ -1,0 +1,33 @@
+name: Import frozen v1.2 static site (one-time)
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/import-frozen-v1.2.yml']
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download verified frozen v1.2 static artifact
+        env:
+          ARTIFACT_URL: "https://sdmntprjapaneast.oaiusercontent.com/files/00000000-ce58-8209-8234-8928c6eca436/raw?se=2026-11-07T02%3A08%3A42Z&sp=r&sv=2026-02-06&sr=b&scid=a8bcc763-0e65-57d4-ab04-cf67b9332bad&skoid=bb372dd6-3b2a-4af2-b355-c26497ba23cd&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-07T01%3A30%3A02Z&ske=2026-11-08T01%3A30%3A02Z&sks=b&skv=2026-02-06&sig=E6Ce2iXn80EEc9pCwXkab/T6wqHC%2B1DuPFzcfjXP/s4%3D"
+        run: |
+          curl --fail --location --retry 3 --silent --show-error "$ARTIFACT_URL" -o /tmp/frozen-site.zip
+          echo "e4f53dec80047b025fa86f35b19a9da49a1bdb3a77b681f39db4e942e1429dda  /tmp/frozen-site.zip" | sha256sum -c -
+      - name: Import static site
+        run: |
+          unzip -q /tmp/frozen-site.zip -d /tmp/frozen-mri-site
+          cp -a /tmp/frozen-mri-site/. .
+          test -f index.html
+          test -f .nojekyll
+          grep -q '/mri-parameter-lab/assets/' index.html
+          grep -q 'source_sha=da8e185c9e792cdcc69d2e20f02de00f36e90de0' RELEASE_PROVENANCE.txt
+      - name: Commit built site files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .nojekyll RELEASE_PROVENANCE.txt assets/
+          git commit -m "deploy: MRI Parameter Lab v1.2 frozen static site"
+          git push
